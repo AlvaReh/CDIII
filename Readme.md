@@ -1,6 +1,4 @@
-﻿convierte esto en un archivo md
-
-1. Estimación de Densidades (Estimacion)
+﻿1. Estimación de Densidades (Estimacion)
 
 - Clase dedicada a estimar funciones de densidad mediante métodos no paramétricos. Incluye:
 
