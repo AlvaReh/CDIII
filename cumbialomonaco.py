@@ -32,6 +32,7 @@ class Estimacion:
         self.datos = datos
 
     def generar_histograma(self, h):
+        """Genera un histograma de los datos con ancho de bin h."""
         bins = np.arange(np.min(self.datos) - h, np.max(self.datos) + h, h)
         fr_abs = np.zeros(len(bins) - 1)
         for ind in range(len(self.datos)):
@@ -54,9 +55,11 @@ class Estimacion:
         return estimaciones_x
 
     def kernel_gauss(self, u):
+        """Calcula el kernel gaussiano."""
         return (1 / np.sqrt(2 * np.pi)) * np.exp(-0.5 * u**2)
 
     def kernel_uni(self, u):
+        """Calcula el kernel uniforme."""
         valores_k = np.zeros_like(u)
         for i in range(len(u)):
             if abs(u[i]) <= 1:
@@ -66,6 +69,7 @@ class Estimacion:
         return valores_k
 
     def kernel_epanechnikov(self, u):
+        """Calcula el kernel Epanechnikov."""
         valores_k = np.zeros_like(u)
         for i in range(len(u)):
             if abs(u[i]) <= 1:
@@ -73,6 +77,7 @@ class Estimacion:
         return valores_k
 
     def kernel_tri(self, u):
+        """Calcula el kernel triangular."""
         valores_k = np.zeros_like(u)
         for i in range(len(u)):
             if abs(u[i]) <= 1:
@@ -123,6 +128,7 @@ class AnalisisDescriptivo(Estimacion):
         return np.percentile(self.datos, [25, 50, 75])
 
     def resumen_numerico(self):
+        """Genera un resumen numérico de las estadísticas descriptivas."""
         return {
             'La media calculada es': self.media(),
             'La mediana calculada es': self.mediana(),
@@ -210,12 +216,15 @@ class GeneradoraDeDatos:
         return y
 
     def calcular_pdf_norm(self, x, mu, sigma):
+        """Calcula la densidad de probabilidad de una distribución normal."""
         return norm.pdf(x, mu, sigma)
 
     def calcular_pdf_uniform(self, x, a, b):
+        """Calcula la densidad de probabilidad de una distribución uniforme."""
         return uniform.pdf(x, a, b)
 
     def calcular_pdf_t(self, x, df, loc=0, scale=1):
+        """Calcula la densidad de probabilidad de una distribución t de Student."""
         return t.pdf((x - loc) / scale, df) / scale
 
     def calcular_BS(self, x):
@@ -251,7 +260,7 @@ class Regresion:
         self.betas = self.modelo_ajustado.params
         self.errores_estandar = self.modelo_ajustado.bse
 
-    def predecir(self, nuevos_x):
+    def predecir_valores(self, nuevos_x):
         """Realiza predicciones con el modelo ajustado."""
         if self.modelo_ajustado is None:
             raise RuntimeError("Modelo no entrenado, debes ajustar primero.")
@@ -261,6 +270,8 @@ class Regresion:
 
 class RegresionLineal(Regresion):
     def __init__(self):
+        """Inicializa el modelo de regresión lineal."""
+        """Llama al constructor de la clase base Regresion con tipo_modelo 'lineal'."""
         super().__init__(tipo_modelo="lineal")
 
     def graficar_dispersion_y_ajuste(self):
@@ -295,11 +306,14 @@ class RegresionLineal(Regresion):
                 corr = np.corrcoef(self.x[:, i], self.y)[0, 1]
                 print(f"Correlación entre las variables X{i+1} e Y:", corr)
 
-    def analicis_residuos(self):
+    def analicis_supuestos(self):
         """Genera gráficos de residuos y QQ plot."""
+
+        """Calcula los residuos y valores predichos del modelo ajustado."""
         residuos = self.modelo_ajustado.resid
         predichos = self.modelo_ajustado.fittedvalues
 
+        """Gráfico de residuos para verificar la homocedasticidad y normalidad."""
         sm.qqplot(residuos, line='45')
         plt.title("QQ plot de residuos")
         plt.grid(True)
@@ -315,16 +329,16 @@ class RegresionLineal(Regresion):
 
     def estadisticas(self):
         """Imprime las estadísticas del modelo ajustado."""
-        print("Betas:")
+        print("Los parametros son:")
         print(self.betas)
-        print("\nErrores estándar:")
+        print("\nLos errores estándar son:")
         print(self.errores_estandar)
-        print("\nT observado:")
+        print("\nEstadistico t-observado es:")
         print(self.modelo_ajustado.tvalues)
-        print("\n P-valores:")
+        print("\nLos p-valores calculados son:")
         print(self.modelo_ajustado.pvalues)
 
-    def calcular_intervalos_confianza_y_prediccion(self, nuevos_x, alpha=0.05):
+    def intervalos_confianza_y_prediccion(self, nuevos_x, alpha=0.05):
         """Calcula intervalos de confianza y predicción para nuevas observaciones."""
         nuevos_x_const = sm.add_constant(nuevos_x)
         pred = self.modelo_ajustado.get_prediction(nuevos_x_const)
@@ -339,26 +353,31 @@ class RegresionLineal(Regresion):
             "Intervalo de confianza de la predicción superior": ic_pred[:, 1]
         }
 
-    def mostrar_r2(self):
+    def calcular_r2(self):
         print("R cuadrado:", self.modelo_ajustado.rsquared)
         print("R cuadrado ajustado:", self.modelo_ajustado.rsquared_adj)
 
 
 class RegresionLinealSimple(RegresionLineal):
+    
     def __init__(self, x, y):
+        """Inicializa el modelo de regresión lineal simple."""
         super().__init__()
         self.ajustar_modelo(x, y)
 
 class RegresionLinealMultiple(RegresionLineal):
     def __init__(self, x, y):
+        """Inicializa el modelo de regresión lineal múltiple."""
         super().__init__()
         self.ajustar_modelo(x, y)
 
-
 class RegresionLogistica(Regresion):
     def __init__(self):
+        """Inicializa el modelo de regresión logística."""
         super().__init__(tipo_modelo="logistica")
+        """Lista para almacenar la sensibilidad."""
         self.sensibilidad = []
+        """Lista para almacenar la especificidad."""
         self.especificidad = []
 
     def prediccion(self, x_nuevo, umbral=0.5):
@@ -375,6 +394,7 @@ class RegresionLogistica(Regresion):
         TN = np.sum((y_pred == 0) & (y_test == 0))
         error = (FN + FP) / len(y_test)
 
+        """Tabla de confusión con los resultados del modelo."""
         tabla = pd.DataFrame({
             'y_test=1': [TP, FN],
             'y_test=0': [FP, TN]
@@ -383,7 +403,7 @@ class RegresionLogistica(Regresion):
         print(tabla)
         print(f"Error de mala clasificación: {error:.2f}")
 
-    def calcular_sensibilidad_y_especificidad(self, x_test, y_test, umbral):
+    def sensibilidad_y_especificidad(self, x_test, y_test, umbral):
         """Calcula la sensibilidad y especificidad del modelo para un umbral dado."""
         y_pred = (self.predecir(x_test) >= umbral).astype(int)
         TP = np.sum((y_pred == 1) & (y_test == 1))
