@@ -45,7 +45,7 @@ class Estimacion:
 
     def evaluar_histograma(self, x, h):
         """Evalúa densidad del histograma en puntos x."""
-        bins, estimacion_hist = self.genera_histograma(h)
+        bins, estimacion_hist = self.generar_histograma(h)
         estimaciones_x = np.zeros(len(x))
         for i in range(len(x)):
             for ind_bin in range(len(bins) - 1):
@@ -92,13 +92,13 @@ class Estimacion:
         for xi in x:
             u = (self.datos - xi) / (h + 1e-10)
             if kernel == 'uniforme':
-                valores_k = self.kernel_uniforme(u)
+                valores_k = self.kernel_uni(u)
             elif kernel == 'gaussiano':
                 valores_k = self.kernel_gaussiano(u)
             elif kernel == 'epanechnikov':
                 valores_k = self.kernel_epanechnikov(u)
             elif kernel == 'triangular':
-                valores_k = self.kernel_triangular(u)
+                valores_k = self.kernel_tri(u)
             else:
                 raise ValueError(f"Kernel '{kernel}' no reconocido.")
             densidad.append(np.sum(valores_k) / (len(self.datos) * (h + 1e-10)))
@@ -130,11 +130,11 @@ class AnalisisDescriptivo(Estimacion):
     def resumen_numerico(self):
         """Genera un resumen numérico de las estadísticas descriptivas."""
         return {
-            'La media calculada es': self.media(),
-            'La mediana calculada es': self.mediana(),
-            'La desviacion estandar calculada es': self.desviacion_estandar(),
-            'La varianza calculada es': self.varianza(),
-            'Los cuartiles calculados es': self.cuartiles(),
+            'La media calculada es': self.calcular_media(),
+            'La mediana calculada es': self.calcular_mediana(),
+            'La desviacion estandar calculada es': self.calcular_desviacion_estandar(),
+            'La varianza calculada es': self.calcular_varianza(),
+            'Los cuartiles calculados es': self.calcular_cuartiles(),
             'El mínimo calculado es': np.min(self.datos),
             'El máximo calculado es': np.max(self.datos)
         }
@@ -142,7 +142,7 @@ class AnalisisDescriptivo(Estimacion):
     def mi_qqplot(self):
         """Genera un QQ plot para comparar los cuantiles muestrales con los cuantiles teóricos de una distribución normal."""
         media = self.media()
-        desviacion_estandar = self.desviacion_estandar()
+        desviacion_estandar = self.calcular_desviacion_estandar()
         data_s = (self.datos - media) / desviacion_estandar
         cuantiles_muestrales = np.sort(data_s)
         pp = np.arange(1, (self.n + 1)) / (self.n + 1)
@@ -157,7 +157,7 @@ class AnalisisDescriptivo(Estimacion):
     def graficar_histograma(self, h):
         """Genera un histograma de los datos con una estimación de densidad."""
         x = np.linspace(np.min(self.datos), np.max(self.datos), 200)  
-        y = self.evalua_histograma(x, h)  
+        y = self.evaluar_histograma(x, h)  
 
         plt.plot(x, y, color='steelblue', linewidth=2, label='Histograma')
         plt.title('Estimación de densidad con histograma')
