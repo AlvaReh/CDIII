@@ -94,7 +94,7 @@ class Estimacion:
             if kernel == 'uniforme':
                 valores_k = self.kernel_uni(u)
             elif kernel == 'gaussiano':
-                valores_k = self.kernel_gaussiano(u)
+                valores_k = self.kernel_gauss(u)
             elif kernel == 'epanechnikov':
                 valores_k = self.kernel_epanechnikov(u)
             elif kernel == 'triangular':
@@ -141,7 +141,7 @@ class AnalisisDescriptivo(Estimacion):
 
     def mi_qqplot(self):
         """Genera un QQ plot para comparar los cuantiles muestrales con los cuantiles teóricos de una distribución normal."""
-        media = self.media()
+        media = self.calcular_media()
         desviacion_estandar = self.calcular_desviacion_estandar()
         data_s = (self.datos - media) / desviacion_estandar
         cuantiles_muestrales = np.sort(data_s)
@@ -254,7 +254,8 @@ class Regresion:
         elif self.tipo_modelo == "logistica":
             modelo = sm.Logit(y, x_const)
         else:
-            raise ValueError("El tipo_modelo debe ser 'lineal' o 'logistica.")
+            raise ValueError("El tipo_modelo debe ser 'lineal' o 'logistica'.")
+
 
         self.modelo_ajustado = modelo.fit()
         self.betas = self.modelo_ajustado.params
@@ -382,12 +383,12 @@ class RegresionLogistica(Regresion):
 
     def prediccion(self, x_nuevo, umbral=0.5):
         """Realiza una predicción binaria basada en un umbral."""
-        prob = self.predecir(x_nuevo)
+        prob = self.predecir_valores(x_nuevo)
         return (prob >= umbral).astype(int)
 
     def evaluar_modelo(self, x_test, y_test):
         """Evalúa el modelo de regresión logística y muestra una tabla de confusión."""
-        y_pred = self.predigo(x_test)
+        y_pred = self.prediccion(x_test)
         FN = np.sum((y_pred == 0) & (y_test == 1))
         FP = np.sum((y_pred == 1) & (y_test == 0))
         TP = np.sum((y_pred == 1) & (y_test == 1))
@@ -405,7 +406,7 @@ class RegresionLogistica(Regresion):
 
     def sensibilidad_y_especificidad(self, x_test, y_test, umbral):
         """Calcula la sensibilidad y especificidad del modelo para un umbral dado."""
-        y_pred = (self.predecir(x_test) >= umbral).astype(int)
+        y_pred = (self.predecir_valores(x_test) >= umbral).astype(int)
         TP = np.sum((y_pred == 1) & (y_test == 1))
         FN = np.sum((y_pred == 0) & (y_test == 1))
         FP = np.sum((y_pred == 1) & (y_test == 0))
@@ -417,7 +418,7 @@ class RegresionLogistica(Regresion):
 
     def calcular_cortes_roc(self, x_test, y_test):
         """Calcula los puntos de corte para la curva ROC."""
-        probs = self.predecir(x_test)
+        probs = self.predecir_valores(x_test)
         cortes = np.linspace(0, 1, 100)
         self.sensibilidad = []
         self.especificidad = []
@@ -431,7 +432,7 @@ class RegresionLogistica(Regresion):
 
     def calcular_curva_roc(self, x_test, y_test):
         """Genera la curva ROC y calcula el AUC."""
-        self.puntos_de_corte_roc(x_test, y_test)
+        self.calcular_cortes_roc(x_test, y_test)
 
         plt.plot(1 - np.array(self.especificidad), self.sensibilidad)
         plt.xlabel("1 - Especificidad")
@@ -442,5 +443,5 @@ class RegresionLogistica(Regresion):
 
     def calcular_AUC(self, x_test, y_test):
         """Calcula el área bajo la curva ROC (AUC)."""
-        especificidad, sensibilidad = self.puntos_de_corte_roc(x_test, y_test)
+        especificidad, sensibilidad = self.calcular_cortes_roc(x_test, y_test)
         return auc(1 - np.array(especificidad), np.array(sensibilidad))
